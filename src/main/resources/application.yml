@@ -1,0 +1,13 @@
+websocket:
+  baseUrl: "wss://ws-feed.pro.coinbase.com"
+  enabled: true
+
+gdax:
+  key:
+  secret:
+  passphrase:
+
+productIds:
+  BTC-GBP,
+  ETH-USDC,
+  OMG-EUR
