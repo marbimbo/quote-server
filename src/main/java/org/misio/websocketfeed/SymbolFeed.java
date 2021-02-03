@@ -7,9 +7,7 @@ import org.misio.websocketfeed.handler.LiveOrderBookHandler;
 import org.misio.websocketfeed.message.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
 import java.io.IOException;
@@ -19,32 +17,20 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Websocketfeed adapted from someone else's code
- * <p>
- * >Jiji Sasidharan
- */
-//@Component
 @ClientEndpoint
-public class WebsocketFeed {
-
-    private static Logger log = LoggerFactory.getLogger(WebsocketFeed.class);
+public class SymbolFeed {
+    private static final Logger log = LoggerFactory.getLogger(SymbolFeed.class);
+    private Session userSession = null;
 
 //    Signature signature;
-
-    private Session userSession = null;
-    private MessageHandler messageHandler;
-
+    private WebsocketFeed.MessageHandler messageHandler;
     private int counter = 0;
-
     private String websocketUrl;
-
-    private Set<String> subscribedChannels;
-
+    private Set<String> subscribedChannels = new HashSet<>();;
     private Boolean isEnabled;
-
     private String key;
     private String passphrase;
+    private String productId;
 
     @Value("${websocket.baseUrl}")
     public void setWebsocketUrl(String websocketUrl) {
@@ -145,7 +131,7 @@ public class WebsocketFeed {
         t.printStackTrace();
     }
 
-    private void setMessageHandler(MessageHandler msgHandler) {
+    private void setMessageHandler(WebsocketFeed.MessageHandler msgHandler) {
         this.messageHandler = msgHandler;
     }
 
@@ -198,7 +184,7 @@ public class WebsocketFeed {
 //            worker.execute();
 //        });
 
-        setMessageHandler(new MessageHandler() {
+        setMessageHandler(new WebsocketFeed.MessageHandler() {
 
             long start = System.currentTimeMillis();
 
@@ -254,12 +240,20 @@ public class WebsocketFeed {
         subscribedChannels.addAll(Arrays.asList(subscribedProducts));
     }
 
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
     /**
      * OrderBookMessage handler. Functional Interface.
      *
      * @author Jiji_Sasidharan
      */
     public interface MessageHandler {
-        void handleMessage(byte[] message);
+        void handleMessage(String message);
     }
 }
