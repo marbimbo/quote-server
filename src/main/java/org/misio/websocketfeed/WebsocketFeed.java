@@ -7,16 +7,13 @@ import org.misio.websocketfeed.handler.LiveOrderBookHandler;
 import org.misio.websocketfeed.message.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -133,7 +130,7 @@ public class WebsocketFeed {
 //    }
 
     @OnMessage
-    public void onMessage(byte[] message) {
+    public void onMessage(String message) {
         if (this.messageHandler != null) {
             this.messageHandler.handleMessage(message);
         }
@@ -203,7 +200,7 @@ public class WebsocketFeed {
             long start = System.currentTimeMillis();
 
             @Override
-            public void handleMessage(byte[] message) {
+            public void handleMessage(String message) {
 //                ++counter;
 //                System.out.println(counter + " : " + System.currentTimeMillis());
                 liveOrderBook.handleMessages(message);
@@ -260,6 +257,6 @@ public class WebsocketFeed {
      * @author Jiji_Sasidharan
      */
     public interface MessageHandler {
-        void handleMessage(byte[] message);
+        void handleMessage(String message);
     }
 }

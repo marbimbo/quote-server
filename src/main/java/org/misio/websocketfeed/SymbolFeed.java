@@ -119,7 +119,7 @@ public class SymbolFeed {
 //    }
 
     @OnMessage
-    public void onMessage(byte[] message) {
+    public void onMessage(String message) {
         if (this.messageHandler != null) {
             this.messageHandler.handleMessage(message);
         }
@@ -189,7 +189,7 @@ public class SymbolFeed {
             long start = System.currentTimeMillis();
 
             @Override
-            public void handleMessage(byte[] message) {
+            public void handleMessage(String message) {
 //                ++counter;
 //                System.out.println(counter + " : " + System.currentTimeMillis());
                 liveOrderBook.handleMessages(message);

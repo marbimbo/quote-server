@@ -2,7 +2,6 @@ package org.misio.engine;
 
 import org.misio.websocketfeed.SymbolFeed;
 import org.misio.websocketfeed.WebSocketWrapper;
-import org.misio.websocketfeed.WebsocketFeed;
 import org.misio.websocketfeed.handler.LiveOrderBookHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,8 +11,6 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,7 +39,7 @@ public class OrderBookRouter implements LiveOrderBookHandler {
 //    }
 
     @Override
-    public void handleMessages(byte[] message) {
+    public void handleMessages(String message) {
 //        System.out.println(message.getProduct_id());
         socket.send("BTC : Hello".getBytes(ZMQ.CHARSET), 0);
     }
@@ -129,7 +126,7 @@ public class OrderBookRouter implements LiveOrderBookHandler {
 //                    socket.send(("OMG-EUR : " + message).getBytes(ZMQ.CHARSET), 0);
 //                    System.out.println("sending in thread: " + Thread.currentThread().getName() + " : " + symbol.getProductId());
 //                    socket.send((symbol.getProductId() + " : " + message).getBytes(ZMQ.CHARSET), 0);
-                    socket.send(message/*.getBytes(ZMQ.CHARSET)*/, 0);
+                    socket.send(symbol.getProductId() + " : " + message/*.getBytes(ZMQ.CHARSET)*/, 0);
                 });
         System.out.println("subscribed and publishing " + symbol.getProductId());
         ++port;
