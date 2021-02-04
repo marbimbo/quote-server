@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 @Component
 public class WebSocketWrapper {
 
-    private List<String> productIds;
+    private List<String> productIds; // TODO: 04.02.21 strange... why does it work with list ?
 
     private List<SymbolFeed> symbolFeeds;
 

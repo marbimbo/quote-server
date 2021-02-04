@@ -57,9 +57,10 @@ public class OrderBookRouter implements LiveOrderBookHandler {
     public void startServer() throws InterruptedException {
         ZContext context = new ZContext();
         ExecutorService executorService = Executors.newFixedThreadPool(webSocketWrapper.getSymbolFeeds().size());
-        webSocketWrapper.getSymbolFeeds().forEach(feed -> {
-            executorService.execute(() -> subscribe(feed, context));
-        });
+//        webSocketWrapper.getSymbolFeeds().forEach(feed -> {
+//            executorService.execute(() -> subscribe(feed, context));
+//        });
+        webSocketWrapper.getSymbolFeeds().forEach(feed -> subscribe(feed, context));
 //        feeds.add(subscribe("BTC-GBP", context, 5555));
 //        feeds.add(subscribe("ETH-USD", context, 5556));
 //        feeds.add(subscribe("BTC-GBP", context, 5557));
@@ -118,7 +119,8 @@ public class OrderBookRouter implements LiveOrderBookHandler {
         ZMQ.Socket socket = context.createSocket(SocketType.PUB);
         int zPort = symbol.getProductId().equals("BTC-GBP") ? 5555 : symbol.getProductId().equals("ETH-USDC") ? 5556 : 5557;
 //        socket.bind("tcp://*:" + port);
-        socket.bind("tcp://*:" + zPort);
+//        socket.bind("tcp://*:" + zPort);
+        socket.bind("tcp://*:" + port);
         symbol.init();
         symbol.subscribe(new String[]{symbol.getProductId()},
                 message -> {
@@ -128,7 +130,7 @@ public class OrderBookRouter implements LiveOrderBookHandler {
 //                    socket.send((symbol.getProductId() + " : " + message).getBytes(ZMQ.CHARSET), 0);
                     socket.send(symbol.getProductId() + " : " + message/*.getBytes(ZMQ.CHARSET)*/, 0);
                 });
-        System.out.println("subscribed and publishing " + symbol.getProductId());
+        System.out.println("subscribed and publishing " + symbol.getProductId() + " on " + port);
         ++port;
     }
 }
