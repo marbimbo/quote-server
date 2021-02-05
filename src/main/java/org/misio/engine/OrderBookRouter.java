@@ -1,8 +1,11 @@
 package org.misio.engine;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.misio.websocketfeed.SymbolFeed;
 import org.misio.websocketfeed.WebSocketWrapper;
 import org.misio.websocketfeed.handler.LiveOrderBookHandler;
+import org.misio.websocketfeed.message.OrderMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -11,6 +14,9 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -122,13 +128,30 @@ public class OrderBookRouter implements LiveOrderBookHandler {
 //        socket.bind("tcp://*:" + zPort);
         socket.bind("tcp://*:" + port);
         symbol.init();
+        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         symbol.subscribe(new String[]{symbol.getProductId()},
                 message -> {
+                    System.out.println(message);
+                    OrderMessage orderMessage =  objectMapper.readValue(message, OrderMessage.class);
+                    if (orderMessage.getRemaining_size() == null) {
+                        orderMessage.setRemaining_size(BigDecimal.valueOf(1));
+//                        System.out.println("remaining_size: " + orderMessage.getRemaining_size());
+//                        System.out.println(message);
+//                        System.out.println(orderMessage);
+                    }
+                    if (orderMessage.getTime() != null && orderMessage.getPrice() != null) {
+                        Instant instant = Instant.parse(orderMessage.getTime());
+                        long epochSecond = instant.getEpochSecond();
+                        int nano = instant.getNano();
+//                        System.out.println("epoch : " + epochSecond + " " + nano + " nano sum : " + (1000000 * epochSecond + nano));
+                        String zeroMqMessage = orderMessage.getProduct_id() + " price=" + orderMessage.getPrice() + ",type=\"" + orderMessage.getType() + "\",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
 //                    System.out.println("sending " + symbol.getProductId());
 //                    socket.send(("OMG-EUR : " + message).getBytes(ZMQ.CHARSET), 0);
 //                    System.out.println("sending in thread: " + Thread.currentThread().getName() + " : " + symbol.getProductId());
 //                    socket.send((symbol.getProductId() + " : " + message).getBytes(ZMQ.CHARSET), 0);
-                    socket.send(symbol.getProductId() + " : " + message/*.getBytes(ZMQ.CHARSET)*/, 0);
+//                    socket.send(symbol.getProductId() + " : " + orderMessage/*.getBytes(ZMQ.CHARSET)*/, 0);
+                        socket.send(zeroMqMessage);
+                    }
                 });
         System.out.println("subscribed and publishing " + symbol.getProductId() + " on " + port);
         ++port;

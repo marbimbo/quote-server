@@ -1,5 +1,6 @@
 package org.misio.websocketfeed;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -119,7 +120,7 @@ public class SymbolFeed {
 //    }
 
     @OnMessage
-    public void onMessage(String message) {
+    public void onMessage(String message) throws JsonProcessingException {
         if (this.messageHandler != null) {
             this.messageHandler.handleMessage(message);
         }
@@ -189,7 +190,7 @@ public class SymbolFeed {
             long start = System.currentTimeMillis();
 
             @Override
-            public void handleMessage(String message) {
+            public void handleMessage(String message) throws JsonProcessingException {
 //                ++counter;
 //                System.out.println(counter + " : " + System.currentTimeMillis());
                 liveOrderBook.handleMessages(message);
