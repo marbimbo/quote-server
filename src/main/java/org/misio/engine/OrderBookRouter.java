@@ -15,7 +15,6 @@ import org.zeromq.ZMQ;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -131,7 +130,7 @@ public class OrderBookRouter implements LiveOrderBookHandler {
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         symbol.subscribe(new String[]{symbol.getProductId()},
                 message -> {
-                    System.out.println(message);
+//                    System.out.println(message);
                     OrderMessage orderMessage =  objectMapper.readValue(message, OrderMessage.class);
                     if (orderMessage.getRemaining_size() == null) {
                         orderMessage.setRemaining_size(BigDecimal.valueOf(1));
@@ -144,7 +143,8 @@ public class OrderBookRouter implements LiveOrderBookHandler {
                         long epochSecond = instant.getEpochSecond();
                         int nano = instant.getNano();
 //                        System.out.println("epoch : " + epochSecond + " " + nano + " nano sum : " + (1000000 * epochSecond + nano));
-                        String zeroMqMessage = orderMessage.getProduct_id() + " price=" + orderMessage.getPrice() + ",type=\"" + orderMessage.getType() + "\",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
+//                        String zeroMqMessage = orderMessage.getProduct_id() + "," + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",type=\"" + orderMessage.getType() + "\",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
+                        String zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
 //                    System.out.println("sending " + symbol.getProductId());
 //                    socket.send(("OMG-EUR : " + message).getBytes(ZMQ.CHARSET), 0);
 //                    System.out.println("sending in thread: " + Thread.currentThread().getName() + " : " + symbol.getProductId());
