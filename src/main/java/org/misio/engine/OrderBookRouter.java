@@ -19,13 +19,14 @@ import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static ch.qos.logback.core.encoder.ByteArrayUtil.hexStringToByteArray;
+
 @Component
 public class OrderBookRouter implements LiveOrderBookHandler {
 
+    private static String privateKey;
     private String[] productIds;
     private ZMQ.Socket socket;
-
-//    private List<WebsocketFeed> feeds;
 
     private WebSocketWrapper webSocketWrapper;
 
@@ -56,6 +57,11 @@ public class OrderBookRouter implements LiveOrderBookHandler {
     @Value("${productIds}")
     public void setProductIds(String[] productIds) {
         this.productIds = productIds;
+    }
+
+    @Value("${security.privateKey}")
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 
     @PostConstruct
@@ -125,6 +131,9 @@ public class OrderBookRouter implements LiveOrderBookHandler {
         int zPort = symbol.getProductId().equals("BTC-GBP") ? 5555 : symbol.getProductId().equals("ETH-USDC") ? 5556 : 5557;
 //        socket.bind("tcp://*:" + port);
 //        socket.bind("tcp://*:" + zPort);
+        socket.setCurveServer(true);
+//        socket.setCurvePublicKey(hexStringToByteArray("54FCBA24E93249969316FB617C872BB0C1D1FF14800427C594CBFACF1BC2D652"));
+        socket.setCurveSecretKey(hexStringToByteArray(privateKey));
         socket.bind("tcp://*:" + port);
         symbol.init();
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
