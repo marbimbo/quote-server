@@ -2,9 +2,9 @@ package org.misio.engine;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.misio.config.BenchmarkConfig;
 import org.misio.websocketfeed.SymbolFeed;
 import org.misio.websocketfeed.WebSocketWrapper;
-import org.misio.websocketfeed.config.BenchmarkConfig;
 import org.misio.websocketfeed.config.TopicSecurityConfig;
 import org.misio.websocketfeed.handler.LiveOrderBookHandler;
 import org.misio.websocketfeed.message.OrderMessage;

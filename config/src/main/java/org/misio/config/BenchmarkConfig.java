@@ -1,4 +1,4 @@
-package org.misio.websocketfeed.config;
+package org.misio.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

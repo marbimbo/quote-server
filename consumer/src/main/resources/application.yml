@@ -1,18 +1,9 @@
 spring:
-  main:
-    banner-mode: off
-
-websocket:
-  baseUrl: "wss://ws-feed.pro.coinbase.com"
-  enabled: true
+  profiles:
+    include: common
 
 server:
   port: 8090
-
-gdax:
-  key:
-  secret:
-  passphrase:
 
 quoteServer:
   schema: "tcp"
@@ -32,19 +23,6 @@ datastore:
   org: "AL"
   bucket: "quota-server"
   enabled: true
-
-benchmark:
-  deltaEnabled: true
-
-productIds:
-  BTC-GBP,
-  ETH-USDC,
-  OMG-EUR
-
-schema: "tcp"
-hostname: "localhost"
-port: 5555
-topic: "BTC"
 
 isRecording: true
 recording:

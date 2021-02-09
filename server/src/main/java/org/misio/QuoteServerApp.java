@@ -1,6 +1,6 @@
 package org.misio;
 
-import org.misio.websocketfeed.config.BenchmarkConfig;
+import org.misio.config.BenchmarkConfig;
 import org.misio.websocketfeed.config.TopicSecurityConfig;
 import org.misio.websocketfeed.config.WebSocketConfig;
 import org.springframework.boot.SpringApplication;

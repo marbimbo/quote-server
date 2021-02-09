@@ -1,7 +1,7 @@
 package org.misio.consumer;
 
+import org.misio.config.BenchmarkConfig;
 import org.misio.consumer.config.datastore.DatastoreConfig;
-import org.misio.consumer.config.qs.BenchmarkConfig;
 import org.misio.consumer.config.qs.QuoteServerConfig;
 import org.misio.consumer.config.qs.TopicSecurity;
 import org.springframework.boot.SpringApplication;
