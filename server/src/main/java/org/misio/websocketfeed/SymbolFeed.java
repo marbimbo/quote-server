@@ -8,41 +8,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.websocket.*;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.time.Instant;
+import java.util.Arrays;
 
 @ClientEndpoint
 public class SymbolFeed {
-    private static final Logger log = LoggerFactory.getLogger(SymbolFeed.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private Session userSession = null;
     private WebsocketFeed.MessageHandler messageHandler;
     private String websocketUrl;
-    private String productId;
+    private String[] productIds;
 
     public void setWebsocketUrl(String websocketUrl) {
         this.websocketUrl = websocketUrl;
     }
 
     public void init() {
-        log.info("Subscribing to websocket");
+        LOG.info("Subscribing to websocket");
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             container.connectToServer(this, new URI(websocketUrl));
         } catch (Exception e) {
-            log.error("Could not connect to remote server: " + e.getMessage() + ", " + e.getLocalizedMessage());
+            LOG.error("Could not connect to remote server: " + e.getMessage() + ", " + e.getLocalizedMessage());
             e.printStackTrace();
         }
     }
 
     @OnOpen
     public void onOpen(Session userSession) {
-        log.info("opening websocket");
+        LOG.info("opening websocket {}", userSession.getId());
         this.userSession = userSession;
     }
 
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        log.info("closing websocket: {}", reason);
+        LOG.info("closing websocket: {} {}", reason, userSession.getId());
         this.userSession = null;
     }
 
@@ -55,7 +57,7 @@ public class SymbolFeed {
 
     @OnError
     public void onError(Session s, Throwable t) {
-        log.error("WebsocketFeed error!!!");
+        LOG.error("WebsocketFeed error!!!");
         t.printStackTrace();
     }
 
@@ -68,7 +70,7 @@ public class SymbolFeed {
     }
 
     public void subscribe(String[] productIds, LiveOrderBookHandler liveOrderBook) {
-        log.info("Subscribing to {}", (Object[]) productIds);
+        LOG.info("Subscribing to {}", Arrays.toString(productIds));
         Subscribe msg = new Subscribe(productIds);
         String jsonSubscribeMessage = signObject(msg);
 
@@ -76,7 +78,7 @@ public class SymbolFeed {
 
         sendMessage(jsonSubscribeMessage);
 
-        log.info("Initialising order book for {} complete", productIds);
+        LOG.info("Initialising order book for {} complete", Arrays.toString(productIds));
     }
 
     private String signObject(Subscribe jsonObj) {
@@ -88,11 +90,11 @@ public class SymbolFeed {
         return gson.toJson(jsonObj);
     }
 
-    public String getProductId() {
-        return productId;
+    public String[] getProductIds() {
+        return productIds;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setProductIds(String[] productIds) {
+        this.productIds = productIds;
     }
 }

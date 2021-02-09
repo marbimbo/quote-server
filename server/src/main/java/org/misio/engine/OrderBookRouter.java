@@ -8,6 +8,8 @@ import org.misio.websocketfeed.WebSocketWrapper;
 import org.misio.websocketfeed.config.TopicSecurityConfig;
 import org.misio.websocketfeed.handler.LiveOrderBookHandler;
 import org.misio.websocketfeed.message.OrderMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.zeromq.SocketType;
@@ -15,15 +17,16 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.annotation.PostConstruct;
+import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static ch.qos.logback.core.encoder.ByteArrayUtil.hexStringToByteArray;
 
 @Component
 public class OrderBookRouter implements LiveOrderBookHandler {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static int port = 5555;
     private ZMQ.Socket socket;
@@ -56,25 +59,25 @@ public class OrderBookRouter implements LiveOrderBookHandler {
     @PostConstruct
     public void startServer() throws InterruptedException {
         ZContext context = new ZContext();
-        ExecutorService executorService = Executors.newFixedThreadPool(webSocketWrapper.getSymbolFeeds().size());
-//        webSocketWrapper.getSymbolFeeds().forEach(feed -> {
+//        ExecutorService executorService = Executors.newFixedThreadPool(webSocketWrapper.getSymbolFeed().size());
+//        webSocketWrapper.getSymbolFeed().forEach(feed -> {
 //            executorService.execute(() -> subscribe(feed, context));
 //        });
-        webSocketWrapper.getSymbolFeeds().forEach(feed -> subscribe(feed, context));
-        System.out.println("open publishers");
+        subscribe(webSocketWrapper.getSymbolFeed(), context);
+//        webSocketWrapper.getSymbolFeed().forEach(feed -> subscribe(feed, context));
+        LOG.info("open publishers");
     }
 
     private void subscribe(SymbolFeed symbol, ZContext context) {
-        System.out.println("subscribed in thread: " + Thread.currentThread().getName());
+        LOG.info("subscribed in thread: " + Thread.currentThread().getName());
         ZMQ.Socket socket = context.createSocket(SocketType.PUB);
         socket.setCurveServer(true);
         socket.setCurveSecretKey(hexStringToByteArray(topicSecurityConfig.getPrivateKey()));
         socket.bind("tcp://*:" + port);
-        symbol.init();
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        symbol.subscribe(new String[]{symbol.getProductId()},
+        symbol.subscribe(symbol.getProductIds(),
                 message -> {
-//                    System.out.println(message);
+//                    LOG.debug(message);
                     OrderMessage orderMessage = objectMapper.readValue(message, OrderMessage.class);
                     if (orderMessage.getRemaining_size() == null) {
                         orderMessage.setRemaining_size(BigDecimal.valueOf(1));
@@ -90,11 +93,11 @@ public class OrderBookRouter implements LiveOrderBookHandler {
                         } else {
                             zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
                         }
-//                        System.out.println("sending in thread: " + Thread.currentThread().getName() + " : " + symbol.getProductId());
+                        LOG.debug("sending in thread: {} {}", Thread.currentThread().getName(), orderMessage.getProduct_id());
                         socket.send(zeroMqMessage);
                     }
                 });
-        System.out.println("subscribed and publishing " + symbol.getProductId() + " on " + port);
+        LOG.debug("subscribed and publishing {} on port {}", symbol.getProductIds(), port);
         ++port;
     }
 }

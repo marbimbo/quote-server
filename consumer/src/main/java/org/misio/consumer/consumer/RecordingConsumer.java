@@ -11,24 +11,20 @@ import org.misio.consumer.config.qs.TopicSecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.lang.invoke.MethodHandles;
 
 @Component
 public class RecordingConsumer implements Consumer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RecordingConsumer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final int THREAD_COUNT = 64;
 
-    private String[] productIds;
     private InfluxDBClient client;
 
     private QuoteServerConfig quoteServerConfig;
@@ -47,11 +43,6 @@ public class RecordingConsumer implements Consumer {
             ba[i] = b;
         }
         return ba;
-    }
-
-    @Value("${recording.productIds}")
-    public void setProductIds(String[] productIds) {
-        this.productIds = productIds;
     }
 
     @Autowired
@@ -82,20 +73,15 @@ public class RecordingConsumer implements Consumer {
 
     @Override
     public void startConsuming() {
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
         try (ZContext context = new ZContext()) {
             WriteApi writeApi = client.getWriteApi();
-            Arrays.stream(productIds).forEach(productId -> {
-                final int zPort = quoteServerConfig.getPort();
-                executorService.execute(() ->
-                        startConsumer(productId, context, writeApi, zPort));
-                quoteServerConfig.setPort(zPort + 1);
-            });
+            final int zPort = quoteServerConfig.getPort();
+            startConsumer(context, writeApi, zPort);
         }
     }
 
-    private void startConsumer(String productId, ZContext context, WriteApi writeApi, int zPort) {
-        System.out.println("Connecting to hello world server on topic : " + productId + " and port " + zPort);
+    private void startConsumer(ZContext context, WriteApi writeApi, int zPort) {
+        LOG.info("Connecting to topics on port " + zPort);
 
         //  Socket to talk to server
         ZMQ.Socket socket = context.createSocket(SocketType.SUB);
@@ -106,14 +92,12 @@ public class RecordingConsumer implements Consumer {
         socket.setCurvePublicKey(hexStringToByteArray(clientPublicKey)); // client public key
         socket.setCurveSecretKey(hexStringToByteArray(clientPrivateKey)); // client private key
         socket.connect(quoteServerConfig.getSchema() + "://" + quoteServerConfig.getHostname() + ":" + zPort);
-        socket.subscribe(productId);
+        socket.subscribe("");
         int counter = 0;
         long start = System.currentTimeMillis();
-//        while (counter < 2000) {
-        while (true) {
+        while (counter < 100000) {
             String stringRecord = socket.recvStr();
-//            System.out.println("Received " + stringRecord);
-//            System.out.println(System.nanoTime());
+            LOG.debug(stringRecord);
             if (datastoreConfig.isEnabled()) { // TODO: 05.02.2021 add buffering
                 if (benchmarkConfig.isDeltaEnabled()) {
                     String benchmarkRecord = stringRecord.replace("<placeholder>", String.valueOf(System.nanoTime()));
@@ -124,6 +108,6 @@ public class RecordingConsumer implements Consumer {
             }
             ++counter;
         }
-//        System.out.println(1000 * counter / (System.currentTimeMillis() - start));
+        LOG.info("rate {}", 1000 * counter / (System.currentTimeMillis() - start));
     }
 }

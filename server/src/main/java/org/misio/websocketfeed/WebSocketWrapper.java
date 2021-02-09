@@ -6,19 +6,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class WebSocketWrapper {
 
-    private List<String> productIds; // TODO: 04.02.21 strange... why does it work with list ?
+    private String[] productIds; // TODO: 04.02.21 strange... why does it work with list ?
 
-    private List<SymbolFeed> symbolFeeds;
+    private SymbolFeed symbolFeed;
     private WebSocketConfig webSocketConfig;
 
     @Value("${productIds}")
-    public void setProductIds(List<String> productIds) {
+    public void setProductIds(String[] productIds) {
         this.productIds = productIds;
     }
 
@@ -29,18 +27,13 @@ public class WebSocketWrapper {
 
     @PostConstruct
     private void init() {
-        symbolFeeds = productIds.stream()
-                .map(productId -> { // TODO: 03.02.2021
-                    SymbolFeed feed = new SymbolFeed();
-                    feed.setProductId(productId);
-                    feed.setWebsocketUrl(webSocketConfig.getBaseUrl());
-                    feed.init();
-                    return feed;
-                })
-                .collect(Collectors.toList());
+        symbolFeed = new SymbolFeed();
+        symbolFeed.setProductIds(productIds);
+        symbolFeed.setWebsocketUrl(webSocketConfig.getBaseUrl());
+        symbolFeed.init();
     }
 
-    public List<SymbolFeed> getSymbolFeeds() {
-        return symbolFeeds;
+    public SymbolFeed getSymbolFeed() {
+        return symbolFeed;
     }
 }
