@@ -1,0 +1,131 @@
+spring:
+  main:
+    banner-mode: off
+
+websocket:
+  baseUrl: "wss://ws-feed.pro.coinbase.com"
+  enabled: true
+
+server:
+  port: 8090
+
+gdax:
+  key:
+  secret:
+  passphrase:
+
+quoteServer:
+  schema: "tcp"
+  hostname: "localhost"
+  port: 5555
+
+security:
+  clientConfig:
+    privateKey: "7BB864B489AFA3671FBE69101F94B38972F24816DFB01B51656B3FEC8DFD0888"
+    publicKey: "BB88471D65E2659B30C55A5321CEBB5AAB2B70A398645C26DCA2B2FCB43FC518"
+  serverConfig:
+    publicKey: "54FCBA24E93249969316FB617C872BB0C1D1FF14800427C594CBFACF1BC2D652"
+
+datastore:
+  url: "http://192.168.0.143:8086"
+  token: "96S2Yj-T2-v6E_QASuuX44NRt8k7DHtKALF4R1y0v9MNNAvqrLgmqntFRMibHvL7M27FRFqp4uJV_LvOhE50_A=="
+  org: "AL"
+  bucket: "quota-server"
+  enabled: true
+
+benchmark:
+  deltaEnabled: true
+
+productIds:
+  BTC-GBP,
+  ETH-USDC,
+  OMG-EUR
+
+schema: "tcp"
+hostname: "localhost"
+port: 5555
+topic: "BTC"
+
+isRecording: true
+recording:
+  productIds:
+    BTC-GBP #,
+#    ETH-USDC,
+#    OMG-EUR,
+#    FIL-USD,
+#    XTZ-USD,
+#    BAND-GBP,
+#    CGLD-GBP,
+#    MKR-BTC,
+#
+#    BAL-USD,
+#    LTC-USD,
+#    DNT-USDC,
+#    FIL-EUR,
+#    MANA-USDC,
+#    FIL-BTC,
+#    XLM-USD,
+#    LOOM-USDC,
+#
+#    NMR-USD,
+#    CVC-USDC,
+#    UMA-GBP,
+#    UNI-USD,
+#    ETH-EUR,
+#    BAT-USDC,
+#    OMG-EUR,
+#    ATOM-USD,
+#
+#    NU-USD,
+#    ETH-USDC,
+#    NMR-GBP,
+#    KNC-USD,
+#    ZEC-BTC,
+#    AAVE-EUR,
+#    ALGO-BTC,
+#    XTZ-USD,
+#
+#    NU-EUR,
+#    XLM-BTC,
+#    LTC-GBP,
+#    LRC-BTC,
+#    ALGO-EUR,
+#    GRT-USD,
+#    MKR-USD,
+#    ETC-USD,
+#
+#    DASH-USD,
+#    BTC-USDC,
+#    REP-BTC,
+#    ETH-GBP,
+#    BAND-BTC,
+#    BNT-BTC,
+#    BAL-BTC,
+#    UMA-EUR,
+#
+#    ETH-DAI,
+#    ETC-GBP,
+#    EOS-EUR,
+#    BAT-ETH,
+#    AAVE-GBP,
+#    SNX-GBP,
+#    CGLD-EUR,
+#    YFI-USD,
+#
+#    XLM-EUR,
+#    OMG-USD,
+#    EOS-BTC,
+#    BCH-BTC,
+#    LINK-GBP,
+#    COMP-BTC,
+#    ZRX-EUR,
+#    BTC-EUR,
+#
+#    GRT-GBP,
+#    ZRX-USD,
+#    FIL-GBP,
+#    CGLD-GBP,
+#    LRC-USD,
+#    BCH-EUR,
+#    AAVE-BTC,
+#    FIL-USD

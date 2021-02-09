@@ -1,3 +1,7 @@
+spring:
+  main:
+    banner-mode: off
+
 websocket:
   baseUrl: "wss://ws-feed.pro.coinbase.com"
   enabled: true
@@ -9,6 +13,9 @@ gdax:
 
 security:
   privateKey: "8E0BDD697628B91D8F245587EE95C5B04D48963F79259877B49CD9063AEAD3B7"
+
+benchmark:
+  deltaEnabled: true
 
 productIds:
   BTC-GBP #,
