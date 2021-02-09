@@ -67,11 +67,7 @@ public class OrderBookRouter implements LiveOrderBookHandler {
     private void subscribe(SymbolFeed symbol, ZContext context) {
         System.out.println("subscribed in thread: " + Thread.currentThread().getName());
         ZMQ.Socket socket = context.createSocket(SocketType.PUB);
-        int zPort = symbol.getProductId().equals("BTC-GBP") ? 5555 : symbol.getProductId().equals("ETH-USDC") ? 5556 : 5557;
-//        socket.bind("tcp://*:" + port);
-//        socket.bind("tcp://*:" + zPort);
         socket.setCurveServer(true);
-//        socket.setCurvePublicKey(hexStringToByteArray("54FCBA24E93249969316FB617C872BB0C1D1FF14800427C594CBFACF1BC2D652"));
         socket.setCurveSecretKey(hexStringToByteArray(topicSecurityConfig.getPrivateKey()));
         socket.bind("tcp://*:" + port);
         symbol.init();
