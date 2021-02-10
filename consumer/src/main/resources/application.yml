@@ -2,9 +2,6 @@ spring:
   profiles:
     include: common
 
-server:
-  port: 8090
-
 quoteServer:
   schema: "tcp"
   hostname: "localhost"
@@ -24,5 +21,3 @@ datastore:
   org: "AL"
   bucket: "quota-server"
   enabled: true
-
-isRecording: true

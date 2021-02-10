@@ -1,7 +1,5 @@
 package org.misio.consumer.consumer;
 
-public interface Consumer {
-
+interface Consumer {
     void startConsuming();
-
 }

@@ -1,10 +1,7 @@
 package org.misio.websocketfeed.message;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.math.BigDecimal;
 
-@JsonIgnoreProperties
 public class OrderMessage {
     String type;
     String product_id;

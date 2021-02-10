@@ -19,11 +19,12 @@ import org.zeromq.ZMQ;
 import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
 
+import static org.misio.config.CurveEncryptUtil.hexStringToByteArray;
+
 @Component
 public class RecordingConsumer implements Consumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final int THREAD_COUNT = 64;
 
     private InfluxDBClient client;
 
@@ -31,19 +32,6 @@ public class RecordingConsumer implements Consumer {
     private TopicSecurity topicSecurity;
     private DatastoreConfig datastoreConfig;
     private BenchmarkConfig benchmarkConfig;
-
-    private static byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] ba = new byte[len / 2];
-
-        for (int i = 0; i < ba.length; i++) {
-            int j = i * 2;
-            int t = Integer.parseInt(s.substring(j, j + 2), 16);
-            byte b = (byte) (t & 0xFF);
-            ba[i] = b;
-        }
-        return ba;
-    }
 
     @Autowired
     public void setQuoteServerConfig(QuoteServerConfig quoteServerConfig) {
@@ -75,13 +63,12 @@ public class RecordingConsumer implements Consumer {
     public void startConsuming() {
         try (ZContext context = new ZContext()) {
             WriteApi writeApi = client.getWriteApi();
-            final int zPort = quoteServerConfig.getPort();
-            startConsumer(context, writeApi, zPort);
+            startConsumer(context, writeApi, quoteServerConfig.getPort());
         }
     }
 
-    private void startConsumer(ZContext context, WriteApi writeApi, int zPort) {
-        LOG.info("Connecting to topics on port " + zPort);
+    private void startConsumer(ZContext context, WriteApi writeApi, final int port) {
+        LOG.info("Connecting to topics on port {}", port);
 
         //  Socket to talk to server
         ZMQ.Socket socket = context.createSocket(SocketType.SUB);
@@ -91,15 +78,12 @@ public class RecordingConsumer implements Consumer {
         socket.setCurveServerKey(hexStringToByteArray(serverPublicKey)); // server public key
         socket.setCurvePublicKey(hexStringToByteArray(clientPublicKey)); // client public key
         socket.setCurveSecretKey(hexStringToByteArray(clientPrivateKey)); // client private key
-        socket.connect(quoteServerConfig.getSchema() + "://" + quoteServerConfig.getHostname() + ":" + zPort);
-        socket.subscribe("");
-        int counter = 0;
-        long start = System.currentTimeMillis();
-//        while (counter < 100000) {
+        socket.connect(quoteServerConfig.getSchema() + "://" + quoteServerConfig.getHostname() + ":" + port);
+        socket.subscribe(""); // subscribe to all symbols
         while (true) {
             String stringRecord = socket.recvStr();
             LOG.debug(stringRecord);
-            if (datastoreConfig.isEnabled()) { // TODO: 05.02.2021 add buffering
+            if (datastoreConfig.isEnabled()) {
                 if (benchmarkConfig.isDeltaEnabled()) {
                     String benchmarkRecord = stringRecord.replace("<placeholder>", String.valueOf(System.nanoTime()));
                     writeApi.writeRecord(datastoreConfig.getBucket(), datastoreConfig.getOrg(), WritePrecision.NS, benchmarkRecord);
@@ -107,8 +91,6 @@ public class RecordingConsumer implements Consumer {
                     writeApi.writeRecord(datastoreConfig.getBucket(), datastoreConfig.getOrg(), WritePrecision.NS, stringRecord);
                 }
             }
-            ++counter;
         }
-//        LOG.info("rate {}", 1000 * counter / (System.currentTimeMillis() - start));
     }
 }

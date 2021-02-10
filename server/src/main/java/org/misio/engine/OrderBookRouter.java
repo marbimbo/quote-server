@@ -7,7 +7,6 @@ import org.misio.websocketfeed.ExceptionHandler;
 import org.misio.websocketfeed.SymbolFeed;
 import org.misio.websocketfeed.WebSocketWrapper;
 import org.misio.websocketfeed.config.TopicSecurityConfig;
-import org.misio.websocketfeed.handler.LiveOrderBookHandler;
 import org.misio.websocketfeed.message.OrderMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,21 +22,19 @@ import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import static ch.qos.logback.core.encoder.ByteArrayUtil.hexStringToByteArray;
+import static org.misio.config.CurveEncryptUtil.hexStringToByteArray;
 
 @Component
-public class OrderBookRouter implements LiveOrderBookHandler {
+public class OrderBookRouter {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private int port;
     private int exceptionPort;
 
-    private ZMQ.Socket socket;
     private WebSocketWrapper webSocketWrapper;
     private TopicSecurityConfig topicSecurityConfig;
     private BenchmarkConfig benchmarkConfig;
-    private int counter = 0;
 
     @Value("${port}")
     public void setPort(int port) {
@@ -64,12 +61,6 @@ public class OrderBookRouter implements LiveOrderBookHandler {
         this.benchmarkConfig = benchmarkConfig;
     }
 
-    @Override
-    public void handleMessages(String message) {
-        socket.send("BTC : Hello".getBytes(ZMQ.CHARSET), 0);
-    }
-
-
     @PostConstruct
     public void startServer() {
         ZContext context = new ZContext();
@@ -92,30 +83,30 @@ public class OrderBookRouter implements LiveOrderBookHandler {
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         symbol.setExceptionHandler(new ExceptionHandler() {
             @Override
-            public void handleException() {
-                String zeroMqMessage = "exception";
+            public void handleException(String exceptionMessage) {
+                exceptionSocket.send("EXCEPTION:" + exceptionMessage);
             }
         });
         symbol.setMessageHandler(message -> {
-                    LOG.debug(message);
-                OrderMessage orderMessage = objectMapper.readValue(message, OrderMessage.class);
-                if (orderMessage.getRemaining_size() == null) {
-                    orderMessage.setRemaining_size(BigDecimal.valueOf(1));
+            LOG.debug(message);
+            OrderMessage orderMessage = objectMapper.readValue(message, OrderMessage.class);
+            if (orderMessage.getRemaining_size() == null) {
+                orderMessage.setRemaining_size(BigDecimal.valueOf(1));
+            }
+            if (orderMessage.getTime() != null && orderMessage.getPrice() != null) {
+                Instant instant = Instant.parse(orderMessage.getTime());
+                long epochSecond = instant.getEpochSecond();
+                int nano = instant.getNano();
+                String zeroMqMessage;
+                if (benchmarkConfig.isDeltaEnabled()) {
+                    long delta = System.nanoTime();
+                    zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + ",t1=" + delta + ",t2=<placeholder> " + (1_000_000_000 * epochSecond + nano);
+                } else {
+                    zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
                 }
-                if (orderMessage.getTime() != null && orderMessage.getPrice() != null) {
-                    Instant instant = Instant.parse(orderMessage.getTime());
-                    long epochSecond = instant.getEpochSecond();
-                    int nano = instant.getNano();
-                    String zeroMqMessage;
-                    if (benchmarkConfig.isDeltaEnabled()) {
-                        long delta = System.nanoTime();
-                        zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + ",t1=" + delta + ",t2=<placeholder> " + (1_000_000_000 * epochSecond + nano);
-                    } else {
-                        zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
-                    }
-                    LOG.debug("sending in thread: {} {}", Thread.currentThread().getName(), orderMessage.getProduct_id());
-                    socket.send(zeroMqMessage);
-                }
+                LOG.debug("sending in thread: {} {}", Thread.currentThread().getName(), orderMessage.getProduct_id());
+                socket.send(zeroMqMessage);
+            }
 
         });
         symbol.init();
