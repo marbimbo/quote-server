@@ -18,11 +18,20 @@ public class SymbolFeed {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private Session userSession = null;
     private WebsocketFeed.MessageHandler messageHandler;
+    private ExceptionHandler exceptionHandler;
     private String websocketUrl;
     private String[] productIds;
 
     public void setWebsocketUrl(String websocketUrl) {
         this.websocketUrl = websocketUrl;
+    }
+
+    public void setMessageHandler(WebsocketFeed.MessageHandler msgHandler) {
+        this.messageHandler = msgHandler;
+    }
+
+    public void setExceptionHandler(ExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
     }
 
     public void init() {
@@ -40,16 +49,29 @@ public class SymbolFeed {
     public void onOpen(Session userSession) {
         LOG.info("opening websocket {}", userSession.getId());
         this.userSession = userSession;
+        subscribe();
+    }
+
+    private void subscribe() {
+        LOG.info("Subscribing to {}", Arrays.toString(productIds));
+        Subscribe msg = new Subscribe(productIds);
+        String jsonSubscribeMessage = signObject(msg);
+
+        sendMessage(jsonSubscribeMessage);
+
+        LOG.info("Initialising order book for {} complete", Arrays.toString(productIds));
     }
 
     @OnClose
     public void onClose(Session userSession, CloseReason reason) {
-        LOG.info("closing websocket: {} {}", reason, userSession.getId());
-        this.userSession = null;
+        LOG.warn("closing websocket: {} {}", reason, userSession.getId());
+        LOG.info("reconnecting");
+        new Thread(this::init).start();
     }
 
     @OnMessage
     public void onMessage(String message) throws JsonProcessingException {
+        LOG.debug("onMessage");
         if (this.messageHandler != null) {
             this.messageHandler.handleMessage(message);
         }
@@ -57,12 +79,8 @@ public class SymbolFeed {
 
     @OnError
     public void onError(Session s, Throwable t) {
-        LOG.error("WebsocketFeed error!!!");
+        LOG.info("WebsocketFeed error!!!");
         t.printStackTrace();
-    }
-
-    private void setMessageHandler(WebsocketFeed.MessageHandler msgHandler) {
-        this.messageHandler = msgHandler;
     }
 
     private void sendMessage(String message) {
@@ -73,9 +91,6 @@ public class SymbolFeed {
         LOG.info("Subscribing to {}", Arrays.toString(productIds));
         Subscribe msg = new Subscribe(productIds);
         String jsonSubscribeMessage = signObject(msg);
-
-        setMessageHandler(liveOrderBook::handleMessages);
-
         sendMessage(jsonSubscribeMessage);
 
         LOG.info("Initialising order book for {} complete", Arrays.toString(productIds));

@@ -54,7 +54,6 @@ public class WebSocketWrapper {
             symbolFeed.setProductIds(productIds);
         }
         symbolFeed.setWebsocketUrl(webSocketConfig.getBaseUrl());
-        symbolFeed.init();
     }
 
     public SymbolFeed getSymbolFeed() {

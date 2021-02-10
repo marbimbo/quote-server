@@ -95,7 +95,8 @@ public class RecordingConsumer implements Consumer {
         socket.subscribe("");
         int counter = 0;
         long start = System.currentTimeMillis();
-        while (counter < 100000) {
+//        while (counter < 100000) {
+        while (true) {
             String stringRecord = socket.recvStr();
             LOG.debug(stringRecord);
             if (datastoreConfig.isEnabled()) { // TODO: 05.02.2021 add buffering
@@ -108,6 +109,6 @@ public class RecordingConsumer implements Consumer {
             }
             ++counter;
         }
-        LOG.info("rate {}", 1000 * counter / (System.currentTimeMillis() - start));
+//        LOG.info("rate {}", 1000 * counter / (System.currentTimeMillis() - start));
     }
 }

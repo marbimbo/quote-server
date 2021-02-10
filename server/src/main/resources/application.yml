@@ -6,6 +6,7 @@ server:
   port : 8080
 
 port: 5555
+exceptionPort: 5556
 
 websocket:
   baseUrl: "wss://ws-feed.pro.coinbase.com"

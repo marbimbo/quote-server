@@ -9,6 +9,7 @@ quoteServer:
   schema: "tcp"
   hostname: "localhost"
   port: 5555
+  exceptionPort: 5556
 
 security:
   clientConfig:

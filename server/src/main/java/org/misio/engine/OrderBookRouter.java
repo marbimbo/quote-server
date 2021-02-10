@@ -3,6 +3,7 @@ package org.misio.engine;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.misio.config.BenchmarkConfig;
+import org.misio.websocketfeed.ExceptionHandler;
 import org.misio.websocketfeed.SymbolFeed;
 import org.misio.websocketfeed.WebSocketWrapper;
 import org.misio.websocketfeed.config.TopicSecurityConfig;
@@ -30,6 +31,8 @@ public class OrderBookRouter implements LiveOrderBookHandler {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private int port;
+    private int exceptionPort;
+
     private ZMQ.Socket socket;
     private WebSocketWrapper webSocketWrapper;
     private TopicSecurityConfig topicSecurityConfig;
@@ -39,6 +42,11 @@ public class OrderBookRouter implements LiveOrderBookHandler {
     @Value("${port}")
     public void setPort(int port) {
         this.port = port;
+    }
+
+    @Value("${exceptionPort}")
+    public void setExceptionPort(int exceptionPort) {
+        this.exceptionPort = exceptionPort;
     }
 
     @Autowired
@@ -63,47 +71,54 @@ public class OrderBookRouter implements LiveOrderBookHandler {
 
 
     @PostConstruct
-    public void startServer() throws InterruptedException {
+    public void startServer() {
         ZContext context = new ZContext();
-//        ExecutorService executorService = Executors.newFixedThreadPool(webSocketWrapper.getSymbolFeed().size());
-//        webSocketWrapper.getSymbolFeed().forEach(feed -> {
-//            executorService.execute(() -> subscribe(feed, context));
-//        });
         subscribe(webSocketWrapper.getSymbolFeed(), context);
-//        webSocketWrapper.getSymbolFeed().forEach(feed -> subscribe(feed, context));
         LOG.info("open publishers");
     }
 
     private void subscribe(SymbolFeed symbol, ZContext context) {
         LOG.info("subscribed in thread: " + Thread.currentThread().getName());
         ZMQ.Socket socket = context.createSocket(SocketType.PUB);
+        ZMQ.Socket exceptionSocket = context.createSocket(SocketType.PUB);
         socket.setCurveServer(true);
         socket.setCurveSecretKey(hexStringToByteArray(topicSecurityConfig.getPrivateKey()));
         socket.bind("tcp://*:" + port);
+
+        exceptionSocket.setCurveServer(true);
+        exceptionSocket.setCurveSecretKey(hexStringToByteArray(topicSecurityConfig.getPrivateKey()));
+        exceptionSocket.bind("tcp://*:" + exceptionPort);
+
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        symbol.subscribe(symbol.getProductIds(),
-                message -> {
-//                    LOG.debug(message);
-                    OrderMessage orderMessage = objectMapper.readValue(message, OrderMessage.class);
-                    if (orderMessage.getRemaining_size() == null) {
-                        orderMessage.setRemaining_size(BigDecimal.valueOf(1));
+        symbol.setExceptionHandler(new ExceptionHandler() {
+            @Override
+            public void handleException() {
+                String zeroMqMessage = "exception";
+            }
+        });
+        symbol.setMessageHandler(message -> {
+                    LOG.debug(message);
+                OrderMessage orderMessage = objectMapper.readValue(message, OrderMessage.class);
+                if (orderMessage.getRemaining_size() == null) {
+                    orderMessage.setRemaining_size(BigDecimal.valueOf(1));
+                }
+                if (orderMessage.getTime() != null && orderMessage.getPrice() != null) {
+                    Instant instant = Instant.parse(orderMessage.getTime());
+                    long epochSecond = instant.getEpochSecond();
+                    int nano = instant.getNano();
+                    String zeroMqMessage;
+                    if (benchmarkConfig.isDeltaEnabled()) {
+                        long delta = System.nanoTime();
+                        zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + ",t1=" + delta + ",t2=<placeholder> " + (1_000_000_000 * epochSecond + nano);
+                    } else {
+                        zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
                     }
-                    if (orderMessage.getTime() != null && orderMessage.getPrice() != null) {
-                        Instant instant = Instant.parse(orderMessage.getTime());
-                        long epochSecond = instant.getEpochSecond();
-                        int nano = instant.getNano();
-                        String zeroMqMessage;
-                        if (benchmarkConfig.isDeltaEnabled()) {
-                            long delta = System.nanoTime();
-                            zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + ",t1=" + delta + ",t2=<placeholder> " + (1_000_000_000 * epochSecond + nano);
-                        } else {
-                            zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
-                        }
-                        LOG.debug("sending in thread: {} {}", Thread.currentThread().getName(), orderMessage.getProduct_id());
-                        socket.send(zeroMqMessage);
-                    }
-                });
+                    LOG.debug("sending in thread: {} {}", Thread.currentThread().getName(), orderMessage.getProduct_id());
+                    socket.send(zeroMqMessage);
+                }
+
+        });
+        symbol.init();
         LOG.debug("subscribed and publishing {} on port {}", symbol.getProductIds(), port);
-        ++port;
     }
 }
