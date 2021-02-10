@@ -7,7 +7,7 @@ server:
 
 quoteServer:
   schema: "tcp"
-  hostname: "192.168.0.143"
+  hostname: "localhost"
   port: 5555
 
 security:

@@ -2,6 +2,11 @@ spring:
   profiles:
     include: common
 
+server:
+  port : 8080
+
+port: 5555
+
 websocket:
   baseUrl: "wss://ws-feed.pro.coinbase.com"
   enabled: true

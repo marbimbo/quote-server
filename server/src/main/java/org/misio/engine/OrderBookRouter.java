@@ -11,6 +11,7 @@ import org.misio.websocketfeed.message.OrderMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
@@ -28,12 +29,17 @@ public class OrderBookRouter implements LiveOrderBookHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static int port = 5555;
+    private int port;
     private ZMQ.Socket socket;
     private WebSocketWrapper webSocketWrapper;
     private TopicSecurityConfig topicSecurityConfig;
     private BenchmarkConfig benchmarkConfig;
     private int counter = 0;
+
+    @Value("${port}")
+    public void setPort(int port) {
+        this.port = port;
+    }
 
     @Autowired
     public void setWebSocketWrapper(WebSocketWrapper webSocketWrapper) {
