@@ -13,4 +13,5 @@ websocket:
   enabled: true
 
 security:
+  enabled: true
   privateKey: "8E0BDD697628B91D8F245587EE95C5B04D48963F79259877B49CD9063AEAD3B7"

@@ -1,49 +1,35 @@
 package org.misio.engine;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.misio.config.BenchmarkConfig;
-import org.misio.websocketfeed.ExceptionHandler;
 import org.misio.websocketfeed.SymbolFeed;
 import org.misio.websocketfeed.WebSocketWrapper;
-import org.misio.websocketfeed.config.TopicSecurityConfig;
-import org.misio.websocketfeed.message.OrderMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.zeromq.SocketType;
 import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
 
 import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
-import java.math.BigDecimal;
-import java.time.Instant;
 
-import static org.misio.config.CurveEncryptUtil.hexStringToByteArray;
+import static org.misio.engine.ExceptionPublisher.EXCEPTION_TOPIC;
 
 @Component
 public class OrderBookRouter {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private int port;
-    private int exceptionPort;
-
+    private RecordPublisher recordPublisher;
+    private ExceptionPublisher exceptionPublisher;
     private WebSocketWrapper webSocketWrapper;
-    private TopicSecurityConfig topicSecurityConfig;
-    private BenchmarkConfig benchmarkConfig;
 
-    @Value("${port}")
-    public void setPort(int port) {
-        this.port = port;
+    @Autowired
+    public void setRecordPublisher(RecordPublisher recordPublisher) {
+        this.recordPublisher = recordPublisher;
     }
 
-    @Value("${exceptionPort}")
-    public void setExceptionPort(int exceptionPort) {
-        this.exceptionPort = exceptionPort;
+    @Autowired
+    public void setExceptionPublisher(ExceptionPublisher exceptionPublisher) {
+        this.exceptionPublisher = exceptionPublisher;
     }
 
     @Autowired
@@ -51,65 +37,18 @@ public class OrderBookRouter {
         this.webSocketWrapper = webSocketWrapper;
     }
 
-    @Autowired
-    public void setTopicSecurityConfig(TopicSecurityConfig topicSecurityConfig) {
-        this.topicSecurityConfig = topicSecurityConfig;
-    }
-
-    @Autowired
-    public void setBenchmarkConfig(BenchmarkConfig benchmarkConfig) {
-        this.benchmarkConfig = benchmarkConfig;
-    }
-
     @PostConstruct
     public void startServer() {
         ZContext context = new ZContext();
-        subscribe(webSocketWrapper.getSymbolFeed(), context);
+        subscribe(webSocketWrapper.getSymbolFeed());
         LOG.info("open publishers");
     }
 
-    private void subscribe(SymbolFeed symbol, ZContext context) {
-        LOG.info("subscribed in thread: " + Thread.currentThread().getName());
-        ZMQ.Socket socket = context.createSocket(SocketType.PUB);
-        ZMQ.Socket exceptionSocket = context.createSocket(SocketType.PUB);
-        socket.setCurveServer(true);
-        socket.setCurveSecretKey(hexStringToByteArray(topicSecurityConfig.getPrivateKey()));
-        socket.bind("tcp://*:" + port);
-
-        exceptionSocket.setCurveServer(true);
-        exceptionSocket.setCurveSecretKey(hexStringToByteArray(topicSecurityConfig.getPrivateKey()));
-        exceptionSocket.bind("tcp://*:" + exceptionPort);
-
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        symbol.setExceptionHandler(new ExceptionHandler() {
-            @Override
-            public void handleException(String exceptionMessage) {
-                exceptionSocket.send("EXCEPTION:" + exceptionMessage);
-            }
-        });
-        symbol.setMessageHandler(message -> {
-            LOG.debug(message);
-            OrderMessage orderMessage = objectMapper.readValue(message, OrderMessage.class);
-            if (orderMessage.getRemaining_size() == null) {
-                orderMessage.setRemaining_size(BigDecimal.valueOf(1));
-            }
-            if (orderMessage.getTime() != null && orderMessage.getPrice() != null) {
-                Instant instant = Instant.parse(orderMessage.getTime());
-                long epochSecond = instant.getEpochSecond();
-                int nano = instant.getNano();
-                String zeroMqMessage;
-                if (benchmarkConfig.isDeltaEnabled()) {
-                    long delta = System.nanoTime();
-                    zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + ",t1=" + delta + ",t2=<placeholder> " + (1_000_000_000 * epochSecond + nano);
-                } else {
-                    zeroMqMessage = orderMessage.getProduct_id() + ",type=" + orderMessage.getType() + " price=" + orderMessage.getPrice() + ",side=\"" + orderMessage.getSide() + "\",remaining_size=" + orderMessage.getRemaining_size() + " " + (1_000_000_000 * epochSecond + nano);
-                }
-                LOG.debug("sending in thread: {} {}", Thread.currentThread().getName(), orderMessage.getProduct_id());
-                socket.send(zeroMqMessage);
-            }
-
-        });
+    private void subscribe(SymbolFeed symbol) {
+        symbol.setMessageHandler(recordPublisher);
+        symbol.setExceptionHandler(exceptionPublisher);
         symbol.init();
-        LOG.debug("subscribed and publishing {} on port {}", symbol.getProductIds(), port);
+        LOG.info("subscribed and publishing {} on port {}", symbol.getProductIds(), recordPublisher.getPort());
+        LOG.info("subscribed and publishing {} on port {}", EXCEPTION_TOPIC, exceptionPublisher.getExceptionPort());
     }
 }
