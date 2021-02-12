@@ -3,21 +3,14 @@ package org.misio.websocketfeed.message;
 import java.math.BigDecimal;
 
 public class OrderMessage {
-    String type;
+
     String product_id;
+    String type;
     Long sequence;
     String side;
     BigDecimal price;
     BigDecimal remaining_size;
     String time;
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 
     public String getProduct_id() {
         return product_id;
@@ -25,6 +18,14 @@ public class OrderMessage {
 
     public void setProduct_id(String product_id) {
         this.product_id = product_id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Long getSequence() {
@@ -65,5 +66,18 @@ public class OrderMessage {
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    @Override
+    public String toString() {
+        return "OrderMessage{" +
+                "product_id='" + product_id + '\'' +
+                ", type='" + type + '\'' +
+                ", sequence=" + sequence +
+                ", side='" + side + '\'' +
+                ", price=" + price +
+                ", remaining_size=" + remaining_size +
+                ", time='" + time + '\'' +
+                '}';
     }
 }

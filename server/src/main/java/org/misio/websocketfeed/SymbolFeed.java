@@ -1,8 +1,8 @@
 package org.misio.websocketfeed;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import org.misio.websocketfeed.message.Channel;
+import org.misio.websocketfeed.message.OrderMessage;
 import org.misio.websocketfeed.message.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Arrays;
 
-@ClientEndpoint
+@ClientEndpoint(decoders = OrderBookDecoder.class)
 public class SymbolFeed {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private Session userSession;
@@ -56,11 +56,11 @@ public class SymbolFeed {
     private void subscribe() {
         LOG.info("Subscribing to {}", Arrays.toString(productIds));
         Channel channel = new Channel();
-        channel.setName("full");
+        channel.setName("full"); // TODO: 12.02.2021 parameters
         channel.setProduct_ids(productIds);
         Subscribe subscribe = new Subscribe();
         subscribe.setChannels(new Channel[]{channel});
-        subscribe.setType("subscribe");
+        subscribe.setType("subscribe"); // TODO: 12.02.2021 parameters
 
         String jsonSubscribeMessage = signObject(subscribe);
         sendMessage(jsonSubscribeMessage);
@@ -72,13 +72,13 @@ public class SymbolFeed {
     public void onClose(Session userSession, CloseReason reason) {
         LOG.warn("closing websocket: {} {}", reason, userSession.getId());
         LOG.info("reconnecting");
-        new Thread(this::init).start();
+        new Thread(this::init).start(); // TODO: 12.02.2021
         exceptionHandler.handleException(reason.getReasonPhrase());
     }
 
     @OnMessage
-    public void onMessage(String message) throws JsonProcessingException {
-        LOG.debug("onMessage");
+    public void onMessage(OrderMessage message) {
+        LOG.debug("onMessage {}", message);
         messageHandler.handleMessage(message);
     }
 

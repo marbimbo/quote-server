@@ -1,7 +1,7 @@
 package org.misio.websocketfeed;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.misio.websocketfeed.message.OrderMessage;
 
 public interface MessageHandler {
-    void handleMessage(String message) throws JsonProcessingException;
+    void handleMessage(OrderMessage message);
 }
