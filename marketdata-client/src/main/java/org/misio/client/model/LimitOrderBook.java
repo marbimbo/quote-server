@@ -109,14 +109,14 @@ public class LimitOrderBook {
         }
     }
 
-    private class BidsComparator implements Comparator<Order> {
+    private static class BidsComparator implements Comparator<Order> {
         @Override
         public int compare(Order o1, Order o2) {
             return o1.getPrice().compareTo(o2.getPrice());
         }
     }
 
-    private class AsksComparator implements Comparator<Order> {
+    private static class AsksComparator implements Comparator<Order> {
         @Override
         public int compare(Order o1, Order o2) {
             return o2.getPrice().compareTo(o1.getPrice());
