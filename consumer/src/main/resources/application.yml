@@ -2,9 +2,13 @@ spring:
   profiles:
     include: common
 
+server:
+  port: 8081
+
 quoteServer:
   schema: "tcp"
   hostname: "localhost"
+  servicePort: 8080
   port: 5555
   exceptionPort: 5556
 

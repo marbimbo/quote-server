@@ -16,7 +16,7 @@ import static org.misio.config.CurveEncryptUtil.hexStringToByteArray;
 @Component
 class ExceptionPublisher implements ExceptionHandler {
 
-    public static final String EXCEPTION_TOPIC = "EXCEPTION";
+    static final String EXCEPTION_TOPIC = "EXCEPTION";
 
     private TopicSecurityConfig topicSecurityConfig;
 

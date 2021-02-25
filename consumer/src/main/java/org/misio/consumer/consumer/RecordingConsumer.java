@@ -11,7 +11,6 @@ import org.misio.consumer.config.qs.TopicSecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
@@ -21,7 +20,6 @@ import java.lang.invoke.MethodHandles;
 
 import static org.misio.config.CurveEncryptUtil.hexStringToByteArray;
 
-@Component
 public class RecordingConsumer implements Consumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());

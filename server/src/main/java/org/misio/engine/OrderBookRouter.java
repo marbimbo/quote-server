@@ -18,13 +18,13 @@ public class OrderBookRouter {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private RecordPublisher recordPublisher;
+    private OrderRecordPublisher orderRecordPublisher;
     private ExceptionPublisher exceptionPublisher;
     private WebSocketWrapper webSocketWrapper;
 
     @Autowired
-    public void setRecordPublisher(RecordPublisher recordPublisher) {
-        this.recordPublisher = recordPublisher;
+    public void setOrderRecordPublisher(OrderRecordPublisher orderRecordPublisher) {
+        this.orderRecordPublisher = orderRecordPublisher;
     }
 
     @Autowired
@@ -45,10 +45,10 @@ public class OrderBookRouter {
     }
 
     private void subscribe(SymbolFeed symbol) {
-        symbol.setMessageHandler(recordPublisher);
+        symbol.setMessageHandler(orderRecordPublisher);
         symbol.setExceptionHandler(exceptionPublisher);
         symbol.init();
-        LOG.info("subscribed and publishing {} on port {}", symbol.getProductIds(), recordPublisher.getPort());
+        LOG.info("subscribed and publishing {} on port {}", symbol.getProductIds(), orderRecordPublisher.getOrderPort());
         LOG.info("subscribed and publishing {} on port {}", EXCEPTION_TOPIC, exceptionPublisher.getExceptionPort());
     }
 }

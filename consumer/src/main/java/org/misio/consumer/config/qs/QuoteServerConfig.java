@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class QuoteServerConfig {
 
     private int port;
+    private int servicePort;
     private int exceptionPort;
     private String schema;
     private String hostname;
@@ -16,6 +17,14 @@ public class QuoteServerConfig {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public int getServicePort() {
+        return servicePort;
+    }
+
+    public void setServicePort(int servicePort) {
+        this.servicePort = servicePort;
     }
 
     public int getExceptionPort() {

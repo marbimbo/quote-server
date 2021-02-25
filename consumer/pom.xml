@@ -18,15 +18,20 @@
     <properties>
         <java.version>9</java.version>
         <junit.jupiter.version>5.6.0</junit.jupiter.version>
-        <oanda.version>3.0.25</oanda.version>
         <commons-logging.version>1.2</commons-logging.version>
         <influxdb.version>1.15.0</influxdb.version>
+        <jeromq.version>0.5.2</jeromq.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.misio</groupId>
             <artifactId>config</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.misio</groupId>
+            <artifactId>marketdata-client</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
@@ -47,7 +52,7 @@
         <dependency>
             <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
-            <version>0.5.2</version>
+            <version>${jeromq.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
