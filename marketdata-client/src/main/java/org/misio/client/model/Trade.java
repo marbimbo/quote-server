@@ -11,17 +11,22 @@ public class Trade {
     private String symbol;
     private BigDecimal price;
     private String side;
+    private long timestamp;
 
-    public void setSymbol(String symbol) {
+    public void setSymbol(final String symbol) {
         this.symbol = symbol;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(final BigDecimal price) {
         this.price = price;
     }
 
-    public void setSide(String side) {
+    public void setSide(final String side) {
         this.side = side;
+    }
+
+    public void setTimestamp(final long timestamp) {
+        this.timestamp = timestamp;
     }
 
     @Override
@@ -30,6 +35,7 @@ public class Trade {
                 "symbol='" + symbol + '\'' +
                 ", price=" + price +
                 ", side='" + side + '\'' +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

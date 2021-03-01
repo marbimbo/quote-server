@@ -7,6 +7,8 @@ import org.misio.client.model.Trade;
 import java.math.BigDecimal;
 import java.util.function.Consumer;
 
+import static org.misio.client.model.OrderMessageType.MATCH;
+
 class OrderParser {
 
     private final LimitOrderBook realtimeOrderBook = new LimitOrderBook();
@@ -51,18 +53,20 @@ class OrderParser {
         String[] sizeKVPair = fields[2].split("=");
         order.setSize(new BigDecimal(sizeKVPair[1]));
 
-        if (type.equals("match")) {
-            tradeCallback.accept(createTrade(order, side));
+        if (type.equals(MATCH.getType())) {
+            long timestamp = Long.parseLong(recordArray[2]);
+            tradeCallback.accept(createTrade(order, side, timestamp));
         }
 
         realtimeOrderBook.handleOrder(order, side, type);
     }
 
-    private Trade createTrade(Order order, String side) {
+    private Trade createTrade(Order order, String side, long timestamp) {
         Trade trade = new Trade();
         trade.setSymbol(symbol);
         trade.setPrice(order.getPrice());
         trade.setSide(side);
+        trade.setTimestamp(timestamp);
         return trade;
     }
 }

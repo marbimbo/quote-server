@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import static java.math.BigDecimal.ZERO;
+import static org.misio.client.model.OrderMessageType.*;
+import static org.misio.client.model.OrderSide.BUY;
 
 public class LimitOrderBook {
 
@@ -32,7 +34,7 @@ public class LimitOrderBook {
     }
 
     public void handleOrder(Order order, String side, String type) {
-        if (side.equals("\"buy\"")) { // TODO enum
+        if (side.equals(BUY.getSide())) {
             handleBid(order, type);
         } else {
             handleAsk(order, type);
@@ -61,7 +63,7 @@ public class LimitOrderBook {
     }
 
     private void addItem(List<Order> orders, Order order, int insertionPoint, String type) {
-        if (type.equals("received")) { // TODO enum
+        if (type.equals(RECEIVED.getType())) {
             order.setQuantity(1);
             orders.add(insertionPoint, order);
         }
@@ -77,35 +79,44 @@ public class LimitOrderBook {
     }
 
     private void updateSize(Order updatedOrder, Order order, String type) {
-        if (type.equals("received")) {
+        if (type.equals(RECEIVED.getType())) {
             updatedOrder.setSize(updatedOrder.getSize().add(order.getSize()));
-        } else if (type.equals("open")) {
+        } else if (type.equals(OPEN.getType())) {
             // do nothing
-        } else if (type.equals("match")) {
+        } else if (type.equals(MATCH.getType())) {
             // do nothing
-        } else if (type.equals("cancel")) {
+        } else if (type.equals(CANCEL.getType())) {
             // do nothing
-        } else if (type.equals("done")) {
+        } else if (type.equals(DONE.getType())) {
             updatedOrder.setSize(updatedOrder.getSize().subtract(order.getSize()));
-        } else if (type.equals("change")) {
+        } else if (type.equals(CHANGE.getType())) {
             updatedOrder.setSize(updatedOrder.getSize().add(order.getSize())); // because we are just sending a diff (new-old)
         }
     }
 
     private void updateQuantity(Order updatedOrder, String type) {
-        if (type.equals("received")) {
+        if (type.equals(RECEIVED.getType())) {
             updatedOrder.setQuantity(updatedOrder.getQuantity() + 1);
-        } else if (type.equals("open")) {
+        } else if (type.equals(OPEN.getType())) {
             // do nothing
-        } else if (type.equals("match")) {
+        } else if (type.equals(MATCH.getType())) {
             // do nothing
-        } else if (type.equals("cancel")) {
+        } else if (type.equals(CANCEL.getType())) {
             // do nothing
-        } else if (type.equals("done")) {
+        } else if (type.equals(DONE.getType())) {
             updatedOrder.setQuantity(updatedOrder.getQuantity() - 1);
-        } else if (type.equals("change")) {
+        } else if (type.equals(CHANGE.getType())) {
             // do nothing
         }
+    }
+
+    @Override
+    public String toString() {
+        return "LimitOrderBook{" +
+                "bids=" + bids +
+                ", asks=" + asks +
+                ", symbol='" + symbol + '\'' +
+                '}';
     }
 
     private static class BidsComparator implements Comparator<Order> {
@@ -120,14 +131,5 @@ public class LimitOrderBook {
         public int compare(Order o1, Order o2) {
             return o1.getPrice().compareTo(o2.getPrice());
         }
-    }
-
-    @Override
-    public String toString() {
-        return "LimitOrderBook{" +
-                "bids=" + bids +
-                ", asks=" + asks +
-                ", symbol='" + symbol + '\'' +
-                '}';
     }
 }
