@@ -19,6 +19,10 @@ security:
   serverConfig:
     publicKey: "54FCBA24E93249969316FB617C872BB0C1D1FF14800427C594CBFACF1BC2D652"
 
+consumers:
+  market-data: true
+  recording: false
+
 datastore:
   url: "http://192.168.0.143:8086"
   token: "96S2Yj-T2-v6E_QASuuX44NRt8k7DHtKALF4R1y0v9MNNAvqrLgmqntFRMibHvL7M27FRFqp4uJV_LvOhE50_A=="

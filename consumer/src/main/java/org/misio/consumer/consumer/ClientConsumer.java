@@ -11,12 +11,14 @@ import org.misio.consumer.config.qs.TopicSecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.lang.invoke.MethodHandles;
 
 @Component
+@ConditionalOnProperty(name = "consumers.market-data", havingValue = "true")
 public class ClientConsumer implements MarketDataListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
