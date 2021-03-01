@@ -1,6 +1,7 @@
 package org.misio.client.model;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class Order {
 
@@ -39,5 +40,15 @@ public class Order {
                 ", size=" + size +
                 ", quantity=" + quantity +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order order = (Order) o;
+        return quantity == order.quantity &&
+                Objects.equals(price, order.price) &&
+                Objects.equals(size, order.size);
     }
 }

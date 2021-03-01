@@ -23,13 +23,12 @@ public class LimitOrderBook {
         this.symbol = symbol;
     }
 
-    @Override
-    public String toString() {
-        return "LimitOrderBook{" +
-                "bids=" + bids +
-                ", asks=" + asks +
-                ", symbol='" + symbol + '\'' +
-                '}';
+    public List<Order> getBids() {
+        return bids;
+    }
+
+    public List<Order> getAsks() {
+        return asks;
     }
 
     public void handleOrder(Order order, String side, String type) {
@@ -112,14 +111,23 @@ public class LimitOrderBook {
     private static class BidsComparator implements Comparator<Order> {
         @Override
         public int compare(Order o1, Order o2) {
-            return o1.getPrice().compareTo(o2.getPrice());
+            return o2.getPrice().compareTo(o1.getPrice());
         }
     }
 
     private static class AsksComparator implements Comparator<Order> {
         @Override
         public int compare(Order o1, Order o2) {
-            return o2.getPrice().compareTo(o1.getPrice());
+            return o1.getPrice().compareTo(o2.getPrice());
         }
+    }
+
+    @Override
+    public String toString() {
+        return "LimitOrderBook{" +
+                "bids=" + bids +
+                ", asks=" + asks +
+                ", symbol='" + symbol + '\'' +
+                '}';
     }
 }
