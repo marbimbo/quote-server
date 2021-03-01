@@ -1,4 +1,5 @@
 # quote-server
+[![Java CI with Maven](https://github.com/marbimbo/quote-server/actions/workflows/maven.yml/badge.svg)](https://github.com/marbimbo/quote-server/actions/workflows/maven.yml)
 ## Quote Server
 
 + **server** - Quote Server application
